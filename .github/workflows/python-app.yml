@@ -35,9 +35,13 @@ jobs:
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
-    - name: Lint
-      uses: astral-sh/ruff-action@v4.0.0
-      
+    - name: Install the code linting and formatting tool Ruff
+      run: pipx install ruff
+    - name: Lint code with Ruff
+      run: ruff check --output-format=github --target-version=py39
+    - name: Check code formatting with Ruff
+      run: ruff format --diff --target-version=py39
+      continue-on-error: true
   
     - name: Test with pytest
       run: pytest
