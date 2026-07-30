@@ -1,2 +1,2 @@
 # AI_July_2026_BankLoan
-This is for the project work on using ML technique to tackle bank loan application assessment.
+This is for the project work on using ML technique to tackle bank loan application assessment. Work started in Jun 2026
