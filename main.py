@@ -63,6 +63,7 @@ def evaluate_model(model, X_test, y_test):
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred, average='weighted', zero_division=0)
     recall = recall_score(y_test, y_pred, average='weighted', zero_division=0)
+    f1 = f1_score(y_test, y_pred, average='weighted', zero_division=0)
 
     print(f"Model Evaluation:\nAccuracy: {accuracy:.4f}\nPrecision: {precision:.4f}\nRecall: {recall:.4f}")
     
@@ -70,6 +71,7 @@ def evaluate_model(model, X_test, y_test):
     mlflow.log_metric("accuracy", accuracy)
     mlflow.log_metric("precision", precision)
     mlflow.log_metric("recall", recall)
+    mlflow.log_metric("f1_score", f1)
 
 def log_feature_importance(model):
     """" Calculates, prints, and returns the top 3 feature importances."""
