@@ -59,6 +59,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./dockerfile
+          # file: ./dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/bank-loan-classifier:latest
