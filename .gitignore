@@ -224,3 +224,5 @@ mlflow.db
 
 # GCP API credentials
 dash_board/gcp_api_credentials.json
+dash_board/advice.py
+
