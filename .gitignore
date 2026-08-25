@@ -221,3 +221,6 @@ __marimo__/
 mlruns/
 mlflow.db
 *.db
+
+# GCP API credentials
+dash_board/gcp_api_credentials.json

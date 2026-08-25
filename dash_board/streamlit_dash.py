@@ -113,7 +113,7 @@ with st.form(key="loan_application_form"):
 
                 print(f"Raw prediction from model server: {raw_prediction}")
                 # Assuming 1 = Approved, 0 = Rejected (adjust to match your label encoding)
-                decision = "Approved" if raw_prediction <= 0.5 else "Rejected"
+                decision = "Approved" if raw_prediction >= 0.5 else "Rejected"
 
                 # Display the prediction result
                 if decision == "Approved":

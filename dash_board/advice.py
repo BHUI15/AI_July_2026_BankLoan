@@ -9,6 +9,11 @@ from pydantic_ai import Agent
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
 
+import json
+from pathlib import Path
+
+credentials_path = Path(__file__).parent / "gcp_api_credentials.json"
+api_key = json.loads(credentials_path.read_text())["api_key"]
 
 # 1. Defin the Schema
 class ActionPlan(BaseModel):
@@ -24,7 +29,7 @@ class ActionPlan(BaseModel):
 
 
 # 2. Create the Agent
-provider = GoogleProvider(api_key="AQ.Ab8RN6ImGYtSueak3U1Se2m63xssPEP_JlCVA6B0yMncorVrXQ")
+provider = GoogleProvider(api_key=api_key)
 advice_agent = Agent [None, ActionPlan](
     model = GoogleModel("gemini-3.1-flash-lite", provider=provider),
     #model="google: gemmini-3.1-flash-lite", 
