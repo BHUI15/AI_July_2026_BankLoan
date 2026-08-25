@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../src")  # Add 
+
 import pandas as pd
 import numpy as np
 import pytest

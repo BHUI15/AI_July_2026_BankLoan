@@ -9,8 +9,88 @@ from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_sc
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from src.feature_engineer import FeatureEngineer
-from src.bank_loan_cleaner import BankLoanCleaner
+#from src.feature_engineer import FeatureEngineer
+#from src.bank_loan_cleaner import BankLoanCleaner
+
+from sklearn.base import BaseEstimator, TransformerMixin
+
+
+class BankLoanCleaner(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        #Validation: ensure input is a pandas DataFrame
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError(f"Expected pandas DataFrame, got {type(X)}")
+
+        #Store input features during fit so sklearn knows about them
+        self.feature_names_in_ = X.columns.to_numpy()
+        return self
+
+    def transform(self, X):
+        #Validation: ensure input is a pandas DataFrame
+        if not isinstance(X, pd.DataFrame):
+            raise ValueError(f"Expected pandas DataFrame, got {type(X)}")
+
+        X_cleaned = X.copy()
+        
+        if 'person_age' in X_cleaned.columns:
+            # Replace ages 80 and above with NaN
+            X_cleaned['person_age'] = X_cleaned['person_age'].mask(X_cleaned['person_age'] >= 80, np.nan) 
+
+        return X_cleaned
+
+    def get_feature_names_out(self, input_features=None):
+        # We don't drop or add columns here, so it's a 1:1 pass-through
+        if input_features is None:
+            return self.feature_names_in_
+
+        return np.array(input_features)
+
+import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
+
+
+class FeatureEngineer(BaseEstimator, TransformerMixin):
+    def __init__(self, drop_person_income=True):
+        self.drop_person_income = drop_person_income
+
+    def fit(self, X, y=None):
+        self.feature_names_in_ = X.columns.to_numpy()
+        return self
+
+    def transform(self, X):
+        X_transformed = X.copy()
+        
+        # Example feature engineering: create a new feature by multiplying two existing features
+        if 'person_income' in X_transformed.columns:
+            X_transformed["logged_person_income"] = np.log(X_transformed["person_income"] + 1)  # Adding 1 to avoid log(0)
+            X_transformed = X_transformed.drop(columns=["person_income"]) if self.drop_person_income else X_transformed
+
+        # Drop unrelated features
+        X_transformed = X_transformed[['person_age', 'person_gender', 'logged_person_income','loan_amnt',
+       'credit_score', 'previous_loan_defaults_on_file']]
+
+        return X_transformed
+
+    def get_feature_names_out(self, input_features=None):
+        # We must explicitily tell sklearn which columns we dropped or added
+        features =(
+            list(input_features) if input_features is not None else list(self.feature_names_in_)
+        )
+        
+        if "person_income" in features and self.drop_person_income:
+            item_tobe_removed = ['person_education', 'person_income',
+                            'person_emp_exp', 'person_home_ownership', 'loan_intent',
+                            'loan_int_rate', 'loan_percent_income', 'cb_person_cred_hist_length']
+            for item in item_tobe_removed:
+                if item in features:
+                    features.remove(item)
+            features.append("logged_person_income")
+
+        return np.array(features, dtype=object)
+
 
 def load_data(file_path: str) -> pd.DataFrame:
     """Load data from a CSV file."""
@@ -95,7 +175,7 @@ def main():
 
     # Enable autologging for scikit-learn (captures GridSearch parameters + CV results)
     mlflow.sklearn.autolog(
-        log_models=False,  # Log the best model found during GridSearchCV
+        log_models=True,  # Log the best model found during GridSearchCV
         log_input_examples=True,  # Log input examples for reproducibility
         log_model_signatures=True  # Log model signatures for input/output schema
     )
@@ -109,16 +189,16 @@ def main():
     
     #3. Build and Tune Pipeline
     pipeline = build_pipeline()
-    print("Pipeline built successfully.")
+    print("Pipeline built successfully!")
 
     param_grid = {
-        'classifier__n_estimators': [10, 50, 100, 150],
-        'classifier__max_depth': [2, 5, 10, 15],
+        'classifier__n_estimators': [10, 50, 100],
+        'classifier__max_depth': [2, 5, 10],
         'classifier__min_samples_split': [2, 5, 10],
-        'classifier__min_samples_leaf': [1, 2, 4, 8]
+        'classifier__min_samples_leaf': [1, 2, 4]
     }
 
-    grid_search = GridSearchCV(pipeline, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search = GridSearchCV(pipeline, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
     with mlflow.start_run():
         print("Starting Grid Search for hyperparameter tuning...")
         grid_search.fit(X_train, y_train)
@@ -135,7 +215,7 @@ def main():
             sk_model=best_model,
             name="model",
             registered_model_name="BankLoanClassifier",
-            code_paths=["src/bank_loan_cleaner.py", "src/feature_engineer.py"],
+            #code_paths=["src/"],
             serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE,
         )  # Log the best model found during GridSearchCV
 
