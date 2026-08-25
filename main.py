@@ -48,9 +48,7 @@ class BankLoanCleaner(BaseEstimator, TransformerMixin):
 
         return np.array(input_features)
 
-import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
-
+# import numpy as np
 
 class FeatureEngineer(BaseEstimator, TransformerMixin):
     def __init__(self, drop_person_income=True):
